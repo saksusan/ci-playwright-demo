@@ -1,47 +1,46 @@
-name: CI Pipeline
+name: Playwright Tests
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
 
-      # Install backend dependencies
-      - name: Install Backend Dependencies
-        run: |
-          cd src
-          npm install
+    # Install backend dependencies
+    - name: Install Backend Dependencies
+      run: |
+        cd src
+        npm install
 
-      # Start backend in background
-      - name: Start Backend
-        run: |
-          cd src
-          npm start &
-          sleep 10
+    # Start backend in background
+    - name: Start Backend
+      run: |
+        cd src
+        node app.js &
+    
+    # Wait for backend to start
+    - name: Wait for backend
+      run: npx wait-on http://localhost:3000
 
-      # Install QA dependencies
-      - name: Install QA Dependencies
-        run: |
-          cd qa-automation
-          npm install
+    # Install Playwright
+    - name: Install Playwright
+      run: |
+        cd qa-automation
+        npm install
+        npx playwright install --with-deps
 
-      - name: Install Playwright Browsers
-        run: |
-          cd qa-automation
-          npx playwright install --with-deps
-
-      - name: Run Playwright Tests
-        run: |
-          cd qa-automation
-          npx playwright test
+    # Run tests
+    - name: Run Playwright Tests
+      run: |
+        cd qa-automation
+        npx playwright test
