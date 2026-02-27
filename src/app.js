@@ -1,33 +1,90 @@
 const express = require('express');
 const path = require('path');
-const app = express();
+const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 
+const { initializeDatabase } = require('./db/database');
+
+// Route modules
+const authRoutes = require('./routes/auth');
+const productsRoutes = require('./routes/products');
+const categoriesRoutes = require('./routes/categories');
+const cartRoutes = require('./routes/cart');
+const ordersRoutes = require('./routes/orders');
+
+// ── Bootstrap DB ────────────────────────────────────────────────────────────
+initializeDatabase();
+
+// ── App ──────────────────────────────────────────────────────────────────────
+const app = express();
+app.use(cors());
 app.use(express.json());
 
-// 1. SERVE THE UI: This makes http://localhost:3000 show your HTML
+// ── Static UI ────────────────────────────────────────────────────────────────
+// Serves the HTML store page so existing Playwright tests still work
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- DYNAMIC API ROUTES ---
+// ── Swagger Docs ─────────────────────────────────────────────────────────────
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: '🛒 ShopAPI Docs',
+    customCss: `
+    .swagger-ui .topbar { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .swagger-ui .topbar-wrapper img { display: none; }
+    .swagger-ui .topbar-wrapper::after {
+      content: '🛒 ShopAPI';
+      color: #e94560;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+  `,
+    swaggerOptions: { persistAuthorization: true },
+}));
 
-// Mock Database (Data stays here while the server is running)
-let cart = [];
+// Expose the raw JSON spec for external tools
+app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
-// 2. LOGIN LOGIC
+// ── API Routes ────────────────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productsRoutes);
+app.use('/api/categories', categoriesRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', ordersRoutes);
+
+// Legacy /api/login for backward compatibility with Playwright tests
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     if (username === 'admin' && password === 'password123') {
-        res.status(200).send({ message: "Login Successful" });
+        res.status(200).send({ message: 'Login Successful' });
     } else {
-        res.status(401).send({ message: "Invalid Credentials" });
+        res.status(401).send({ message: 'Invalid Credentials' });
     }
 });
 
-// 3. CART LOGIC
-app.post('/api/cart', (req, res) => {
-    const { item } = req.body;
-    cart.push(item);
-    console.log("Current Cart:", cart); // See it in your terminal
-    res.status(201).send({ message: "Item added", currentCart: cart });
+// ── Health check ────────────────────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        app: 'ShopAPI',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        docs: 'http://localhost:3000/api-docs',
+    });
 });
 
-app.listen(3000, () => console.log('🚀 Server running at http://localhost:3000'));
+// ── 404 fallback ─────────────────────────────────────────────────────────────
+app.use((req, res) => {
+    res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
+});
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+app.listen(3000, () => {
+    console.log('');
+    console.log('🚀  ShopAPI is running!');
+    console.log('');
+    console.log('   📌  Store UI    →  http://localhost:3000');
+    console.log('   📖  Swagger UI  →  http://localhost:3000/api-docs');
+    console.log('   💓  Health      →  http://localhost:3000/api/health');
+    console.log('');
+});
