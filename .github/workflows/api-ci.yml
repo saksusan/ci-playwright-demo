@@ -3,8 +3,8 @@ name: API Automation Tests
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'qa-automation/postman'
+    # paths:
+    #   - 'qa-automation/postman'
     # workflow_dispatch:
 
 jobs:
