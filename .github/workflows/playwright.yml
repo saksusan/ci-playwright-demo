@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'qa-automation/postman'
+    workflow_dispatch:
 
 jobs:
   test:
