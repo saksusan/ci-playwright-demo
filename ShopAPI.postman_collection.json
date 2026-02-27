@@ -1,0 +1,824 @@
+{
+    "info": {
+        "name": "🛒 ShopAPI",
+        "description": "Complete Postman collection for the ShopAPI e-commerce REST API.\n\nBase URL: `http://localhost:3000`\n\n## Authentication\nSome endpoints require a JWT Bearer token. Use the **Login** request to obtain a token, then set the collection-level variable `token` to use it automatically.\n\n## Session\nCart endpoints use an `x-session-id` header to identify the shopping cart. The collection defaults this to `test-session-1`.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "shopapi"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string",
+            "description": "JWT token — populated automatically after Login"
+        },
+        {
+            "key": "session_id",
+            "value": "test-session-1",
+            "type": "string",
+            "description": "Session ID used for cart operations"
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "item": [
+        {
+            "name": "🏥 Health",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health"
+                            ]
+                        },
+                        "description": "Returns the API health status, version, and docs URL."
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{base_url}}/api/health"
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"status\": \"ok\",\n  \"app\": \"ShopAPI\",\n  \"version\": \"1.0.0\",\n  \"timestamp\": \"2026-02-27T06:00:00.000Z\",\n  \"docs\": \"http://localhost:3000/api-docs\"\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "🔑 Auth",
+            "item": [
+                {
+                    "name": "Register",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status is 201', () => pm.response.to.have.status(201));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"secret123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Register a new user account. Returns the new user's ID."
+                    },
+                    "response": [
+                        {
+                            "name": "201 Created",
+                            "status": "Created",
+                            "code": 201,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"User registered successfully\",\n  \"userId\": 1\n}"
+                        },
+                        {
+                            "name": "400 Already Exists",
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"error\": \"Username or email already exists\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "  const json = pm.response.json();",
+                                    "  pm.collectionVariables.set('token', json.token);",
+                                    "  pm.test('Token saved', () => pm.expect(json.token).to.be.a('string'));",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"secret123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login with email and password. The test script automatically saves the returned JWT to the `token` collection variable."
+                    },
+                    "response": [
+                        {
+                            "name": "200 Login Successful",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Login Successful\",\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": 1,\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"role\": \"user\"\n  }\n}"
+                        },
+                        {
+                            "name": "401 Invalid Credentials",
+                            "status": "Unauthorized",
+                            "code": 401,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Invalid Credentials\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Legacy Login (Playwright compat)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "login"
+                            ]
+                        },
+                        "description": "Legacy login endpoint kept for backward compatibility with Playwright tests. Accepts `username` + `password` (hardcoded: admin / password123)."
+                    },
+                    "response": [
+                        {
+                            "name": "200 Login Successful",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"message\": \"Login Successful\" }"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "🗂️ Categories",
+            "item": [
+                {
+                    "name": "Get All Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ]
+                        },
+                        "description": "Returns all product categories ordered by name."
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Electronics\",\n    \"slug\": \"electronics\",\n    \"description\": \"Gadgets and devices\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Clothing\",\n    \"slug\": \"clothing\",\n    \"description\": \"Apparel and accessories\"\n  }\n]"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Sports\",\n  \"slug\": \"sports\",\n  \"description\": \"Sports equipment and accessories\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "categories"
+                            ]
+                        },
+                        "description": "Creates a new product category. `name` and `slug` are required. `slug` must be unique."
+                    },
+                    "response": [
+                        {
+                            "name": "201 Created",
+                            "status": "Created",
+                            "code": 201,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Category created\",\n  \"categoryId\": 3\n}"
+                        },
+                        {
+                            "name": "400 Duplicate",
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"error\": \"Category name or slug already exists\"\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "📦 Products",
+            "item": [
+                {
+                    "name": "Get All Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/products",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "products"
+                            ],
+                            "query": [
+                                {
+                                    "key": "category",
+                                    "value": "electronics",
+                                    "description": "Filter by category slug",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "mouse",
+                                    "description": "Search by product name",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "minPrice",
+                                    "value": "10",
+                                    "description": "Minimum price",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "maxPrice",
+                                    "value": "200",
+                                    "description": "Maximum price",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Returns all products. Supports optional query filters:\n- `category` — filter by category slug\n- `search` — search by product name\n- `minPrice` / `maxPrice` — price range filter"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Gaming Mouse\",\n    \"description\": \"High-precision gaming mouse\",\n    \"price\": 49.99,\n    \"stock\": 100,\n    \"category_id\": 1,\n    \"image_url\": null,\n    \"created_at\": \"2026-02-27T06:00:00.000Z\",\n    \"category_name\": \"Electronics\",\n    \"category_slug\": \"electronics\"\n  }\n]"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Product by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/products/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "products",
+                                "1"
+                            ]
+                        },
+                        "description": "Returns a single product by its numeric ID, including its category name and slug."
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"id\": 1,\n  \"name\": \"Gaming Mouse\",\n  \"description\": \"High-precision gaming mouse\",\n  \"price\": 49.99,\n  \"stock\": 100,\n  \"category_id\": 1,\n  \"image_url\": null,\n  \"created_at\": \"2026-02-27T06:00:00.000Z\",\n  \"category_name\": \"Electronics\",\n  \"category_slug\": \"electronics\"\n}"
+                        },
+                        {
+                            "name": "404 Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Product not found\" }"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Product",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Gaming Mouse\",\n  \"description\": \"High-precision wireless gaming mouse with RGB lighting\",\n  \"price\": 49.99,\n  \"stock\": 100,\n  \"category_id\": 1,\n  \"image_url\": \"https://example.com/images/gaming-mouse.png\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/products",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "products"
+                            ]
+                        },
+                        "description": "Creates a new product. `name`, `price`, and `stock` are required."
+                    },
+                    "response": [
+                        {
+                            "name": "201 Created",
+                            "status": "Created",
+                            "code": 201,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Product created\",\n  \"product\": {\n    \"id\": 5,\n    \"name\": \"Gaming Mouse\",\n    \"price\": 49.99,\n    \"stock\": 100\n  }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Update Product",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"price\": 39.99,\n  \"stock\": 150\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/products/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "products",
+                                "1"
+                            ]
+                        },
+                        "description": "Updates an existing product by ID. All fields are optional — only provided fields will be updated (others retain their current values)."
+                    },
+                    "response": [
+                        {
+                            "name": "200 Updated",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Product updated\",\n  \"product\": {\n    \"id\": 1,\n    \"name\": \"Gaming Mouse\",\n    \"price\": 39.99,\n    \"stock\": 150\n  }\n}"
+                        },
+                        {
+                            "name": "404 Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Product not found\" }"
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete Product",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/products/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "products",
+                                "1"
+                            ]
+                        },
+                        "description": "Permanently deletes a product by ID."
+                    },
+                    "response": [
+                        {
+                            "name": "200 Deleted",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"message\": \"Product deleted successfully\" }"
+                        },
+                        {
+                            "name": "404 Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Product not found\" }"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "🛒 Cart",
+            "item": [
+                {
+                    "name": "Get Cart",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-session-id",
+                                "value": "{{session_id}}",
+                                "description": "Session identifier for the cart"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/cart",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cart"
+                            ]
+                        },
+                        "description": "Returns all items in the cart for the given `x-session-id`. Defaults to `default-session` if header is omitted."
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"items\": [\n    {\n      \"id\": 1,\n      \"quantity\": 2,\n      \"added_at\": \"2026-02-27T06:00:00.000Z\",\n      \"product_id\": 1,\n      \"name\": \"Gaming Mouse\",\n      \"price\": 49.99,\n      \"image_url\": null,\n      \"subtotal\": 99.98\n    }\n  ],\n  \"total\": 99.98,\n  \"count\": 1\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Add to Cart",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-session-id",
+                                "value": "{{session_id}}",
+                                "description": "Session identifier for the cart"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/cart",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cart"
+                            ]
+                        },
+                        "description": "Adds a product to the cart (or increments quantity if already present). Requires `product_id`. `quantity` defaults to 1.\n\nLegacy mode: send only `item` (string) for Playwright test backward compatibility."
+                    },
+                    "response": [
+                        {
+                            "name": "201 Added",
+                            "status": "Created",
+                            "code": 201,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Item added\",\n  \"currentCart\": [\n    { \"id\": 1, \"quantity\": 2, \"name\": \"Gaming Mouse\", \"price\": 49.99 }\n  ]\n}"
+                        },
+                        {
+                            "name": "404 Product Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Product not found\" }"
+                        }
+                    ]
+                },
+                {
+                    "name": "Remove Cart Item",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/cart/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cart",
+                                "1"
+                            ]
+                        },
+                        "description": "Removes a single cart item by its cart item ID (not product ID)."
+                    },
+                    "response": [
+                        {
+                            "name": "200 Removed",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"message\": \"Item removed from cart\" }"
+                        },
+                        {
+                            "name": "404 Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Cart item not found\" }"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "📋 Orders",
+            "item": [
+                {
+                    "name": "Checkout (Create Order)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-session-id",
+                                "value": "{{session_id}}",
+                                "description": "Session ID — order is built from this session's cart"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/orders",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ]
+                        },
+                        "description": "Places an order from the current session's cart.\n\n- Validates stock for each item\n- Deducts stock atomically\n- Clears the cart after a successful checkout\n- `user_id` is optional"
+                    },
+                    "response": [
+                        {
+                            "name": "201 Order Placed",
+                            "status": "Created",
+                            "code": 201,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Order placed successfully\",\n  \"orderId\": 42,\n  \"total\": 99.98\n}"
+                        },
+                        {
+                            "name": "400 Empty Cart",
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Cart is empty. Add items before checking out.\" }"
+                        },
+                        {
+                            "name": "400 Insufficient Stock",
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Insufficient stock for \\\"Gaming Mouse\\\". Available: 3\" }"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get All Orders",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/orders",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "Filter by user ID",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "pending",
+                                    "description": "Filter by status: pending | processing | shipped | delivered | cancelled",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Lists all orders, newest first. Supports optional filters:\n- `user_id` — filter by user\n- `status` — filter by order status"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "[\n  {\n    \"id\": 42,\n    \"user_id\": 1,\n    \"status\": \"pending\",\n    \"total\": 99.98,\n    \"created_at\": \"2026-02-27T06:05:00.000Z\"\n  }\n]"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Order by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/orders/42",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "42"
+                            ]
+                        },
+                        "description": "Returns full order details including all line items, quantities, and individual unit prices."
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"id\": 42,\n  \"user_id\": 1,\n  \"status\": \"pending\",\n  \"total\": 99.98,\n  \"created_at\": \"2026-02-27T06:05:00.000Z\",\n  \"items\": [\n    {\n      \"id\": 1,\n      \"quantity\": 2,\n      \"unit_price\": 49.99,\n      \"subtotal\": 99.98,\n      \"product_name\": \"Gaming Mouse\",\n      \"image_url\": null\n    }\n  ]\n}"
+                        },
+                        {
+                            "name": "404 Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Order not found\" }"
+                        }
+                    ]
+                },
+                {
+                    "name": "Update Order Status",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"shipped\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/orders/42/status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "orders",
+                                "42",
+                                "status"
+                            ]
+                        },
+                        "description": "Updates the status of an existing order.\n\nValid values for `status`: `pending`, `processing`, `shipped`, `delivered`, `cancelled`"
+                    },
+                    "response": [
+                        {
+                            "name": "200 Updated",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "body": "{\n  \"message\": \"Order status updated\",\n  \"orderId\": 42,\n  \"status\": \"shipped\"\n}"
+                        },
+                        {
+                            "name": "400 Invalid Status",
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Invalid status. Must be one of: pending, processing, shipped, delivered, cancelled\" }"
+                        },
+                        {
+                            "name": "404 Not Found",
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "body": "{ \"error\": \"Order not found\" }"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

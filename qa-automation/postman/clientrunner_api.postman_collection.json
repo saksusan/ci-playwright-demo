@@ -1,0 +1,248 @@
+{
+	"info": {
+		"_postman_id": "d427b0cd-d01f-41af-82da-33305cbecc0e",
+		"name": "export ci/cd api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42670639",
+		"_collection_link": "https://dark-firefly-458827.postman.co/workspace/My-Workspace~f8c104ba-7cca-4ac8-8558-43253815f055/collection/42670639-d427b0cd-d01f-41af-82da-33305cbecc0e?action=share&source=collection_link&creator=42670639"
+	},
+	"item": [
+		{
+			"name": "Runner-client Copy",
+			"item": [
+				{
+					"name": "Register Copy 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201', () => pm.response.to.have.status(201));"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"hemu\",\n  \"email\": \"adhikarihemanta@gmail.com\",\n  \"password\": \"hemu@1234\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account. Returns the new user's ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Login Copy 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  const json = pm.response.json();",
+									"  pm.environment.set('token', json.token);",
+									"  pm.test('Token saved', () => pm.expect(json.token).to.be.a('string'));",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password. The test script automatically saves the returned JWT to the `token` collection variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "electronics",
+									"description": "Filter by category slug",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "mouse",
+									"description": "Search by product name",
+									"disabled": true
+								},
+								{
+									"key": "minPrice",
+									"value": "10",
+									"description": "Minimum price",
+									"disabled": true
+								},
+								{
+									"key": "maxPrice",
+									"value": "200",
+									"description": "Maximum price",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Returns all products. Supports optional query filters:\n- `category` — filter by category slug\n- `search` — search by product name\n- `minPrice` / `maxPrice` — price range filter"
+					},
+					"response": []
+				},
+				{
+					"name": "Add to Cart Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-session-id",
+								"value": "{{session_id}}",
+								"description": "Session identifier for the cart"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"description": "Adds a product to the cart (or increments quantity if already present). Requires `product_id`. `quantity` defaults to 1.\n\nLegacy mode: send only `item` (string) for Playwright test backward compatibility."
+					},
+					"response": []
+				},
+				{
+					"name": "Checkout (Create Order) Copy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-session-id",
+								"value": "{{session_id}}",
+								"description": "Session ID — order is built from this session's cart"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 6\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						},
+						"description": "Places an order from the current session's cart.\n\n- Validates stock for each item\n- Deducts stock atomically\n- Clears the cart after a successful checkout\n- `user_id` is optional"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Orders Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "1",
+									"description": "Filter by user ID",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "pending",
+									"description": "Filter by status: pending | processing | shipped | delivered | cancelled",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lists all orders, newest first. Supports optional filters:\n- `user_id` — filter by user\n- `status` — filter by order status"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
