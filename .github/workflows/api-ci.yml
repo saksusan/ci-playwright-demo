@@ -1,11 +1,11 @@
-name: API Automation Tests
+name: API Tests
 
 on:
   push:
     branches: [ main ]
     # paths:
     #   - 'qa-automation/postman'
-    # workflow_dispatch:
+    workflow_dispatch:
 
 jobs:
   run-api-tests:
