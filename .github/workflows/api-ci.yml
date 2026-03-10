@@ -22,12 +22,11 @@
 
         - name: Install Backend Dependencies
           run: |
-            cd backend
             npm install
 
         - name: Start Backend Server
           run: |
-            cd backend
+            cd src
             npm start &
 
         - name: Wait for Server
