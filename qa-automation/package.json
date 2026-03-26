@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "type": "module",
+  "scripts": {
+    "test:smoke": "TAGS=@smoke npx playwright test",
+    "test:sanity": "TAGS=@sanity npx playwright test",
+    "test:regression": "TAGS=@regression npx playwright test",
+    "test:all": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "report": "npx playwright show-report"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
