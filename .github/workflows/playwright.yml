@@ -1,49 +1,204 @@
+# name: Playwright Tests
+
+# on:
+#   push:
+#     branches: [ main ]
+#     # paths:
+#     #   - 'qa-automation/postman'
+#     workflow_dispatch:
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - uses: actions/checkout@v4
+
+#     - name: Setup Node
+#       uses: actions/setup-node@v4
+#       with:
+#         node-version: 18
+
+#     # Install backend dependencies
+#     - name: Install Backend Dependencies
+#       run: |
+#         cd src
+#         npm install
+
+#     # Start backend in background
+#     - name: Start Backend
+#       run: |
+#         cd src
+#         node app.js &
+    
+#     # Wait for backend to start
+#     - name: Wait for backend
+#       run: npx wait-on http://localhost:3000
+
+#     # Install Playwright
+#     - name: Install Playwright
+#       run: |
+#         cd qa-automation
+#         npm install
+#         npx playwright install --with-deps
+
+#     # Run tests
+#     - name: Run Playwright Tests
+#       run: |
+#         cd qa-automation
+#         npx playwright test
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 name: Playwright Tests
 
 on:
   push:
     branches: [ main ]
-    # paths:
-    #   - 'qa-automation/postman'
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-  test:
+
+  # ─── JOB 1: SMOKE ───────────────────────────────────────────
+  smoke:
+    name: 🔥 Smoke Tests
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-    # Install backend dependencies
-    - name: Install Backend Dependencies
-      run: |
-        cd src
-        npm install
+      # start backend
+      - name: Install Backend Dependencies
+        run: |
+          cd src
+          npm install
 
-    # Start backend in background
-    - name: Start Backend
-      run: |
-        cd src
-        node app.js &
-    
-    # Wait for backend to start
-    - name: Wait for backend
-      run: npx wait-on http://localhost:3000
+      - name: Start Backend
+        run: |
+          cd src
+          node app.js &
 
-    # Install Playwright
-    - name: Install Playwright
-      run: |
-        cd qa-automation
-        npm install
-        npx playwright install --with-deps
+      - name: Wait for backend to be ready
+        run: npx wait-on http://localhost:3000
 
-    # Run tests
-    - name: Run Playwright Tests
-      run: |
-        cd qa-automation
-        npx playwright test
+      # install playwright
+      - name: Install Playwright
+        run: |
+          cd qa-automation
+          npm install
+          npx playwright install --with-deps
+
+      # run ONLY smoke tests
+      - name: Run Smoke Tests
+        run: |
+          cd qa-automation
+          TAGS=@smoke npx playwright test
+
+      # save report if tests fail
+      - name: Upload Smoke Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: qa-automation/playwright-report/
+
+
+  # ─── JOB 2: SANITY ──────────────────────────────────────────
+  sanity:
+    name: 🧪 Sanity Tests
+    runs-on: ubuntu-latest
+    needs: smoke              # only runs if smoke job passes
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Backend Dependencies
+        run: |
+          cd src
+          npm install
+
+      - name: Start Backend
+        run: |
+          cd src
+          node app.js &
+
+      - name: Wait for backend to be ready
+        run: npx wait-on http://localhost:3000
+
+      - name: Install Playwright
+        run: |
+          cd qa-automation
+          npm install
+          npx playwright install --with-deps
+
+      # run ONLY sanity tests
+      - name: Run Sanity Tests
+        run: |
+          cd qa-automation
+          TAGS=@sanity npx playwright test
+
+      - name: Upload Sanity Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sanity-report
+          path: qa-automation/playwright-report/
+
+
+  # ─── JOB 3: REGRESSION ──────────────────────────────────────
+  regression:
+    name: 🔁 Regression Tests
+    runs-on: ubuntu-latest
+    needs: sanity             # only runs if sanity job passes
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Backend Dependencies
+        run: |
+          cd src
+          npm install
+
+      - name: Start Backend
+        run: |
+          cd src
+          node app.js &
+
+      - name: Wait for backend to be ready
+        run: npx wait-on http://localhost:3000
+
+      - name: Install Playwright
+        run: |
+          cd qa-automation
+          npm install
+          npx playwright install --with-deps
+
+      # run ONLY regression tests
+      - name: Run Regression Tests
+        run: |
+          cd qa-automation
+          TAGS=@regression npx playwright test
+
+      - name: Upload Regression Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: qa-automation/playwright-report/
