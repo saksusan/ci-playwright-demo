@@ -12,6 +12,7 @@ const productsRoutes = require('./routes/products');
 const categoriesRoutes = require('./routes/categories');
 const cartRoutes = require('./routes/cart');
 const ordersRoutes = require('./routes/orders');
+const adminRoutes = require('./routes/admin');
 
 // ── Bootstrap DB ────────────────────────────────────────────────────────────
 initializeDatabase();
@@ -45,12 +46,18 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // Expose the raw JSON spec for external tools
 app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
+// ── Admin panel ──────────────────────────────────────────────────────────────
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Legacy /api/login for backward compatibility with Playwright tests
 app.post('/api/login', (req, res) => {
@@ -84,6 +91,7 @@ app.listen(3000, () => {
     console.log('🚀  ShopAPI is running!');
     console.log('');
     console.log('   📌  Store UI    →  http://localhost:3000');
+    console.log('   🔐  Admin Panel →  http://localhost:3000/admin');
     console.log('   📖  Swagger UI  →  http://localhost:3000/api-docs');
     console.log('   💓  Health      →  http://localhost:3000/api/health');
     console.log('');
